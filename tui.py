@@ -20,7 +20,7 @@ import time
 import tty
 import unicodedata
 from pathlib import Path
-from typing import Callable, NamedTuple, Optional
+from typing import Callable, NamedTuple
 
 from proxy import Store
 
@@ -194,9 +194,10 @@ def _tok_per_sec(r):
 
 class RecentCol(NamedTuple):
     header: str
-    width: Optional[int]
+    width: int
     right: bool
     get: Callable
+    flex: bool = False
 
 
 class PeriodCol(NamedTuple):
@@ -208,7 +209,7 @@ class PeriodCol(NamedTuple):
 RECENT_COLS = [
     RecentCol("Time", 11, False, lambda r: time.strftime("%m/%d %H:%M", time.localtime(r["ts"]))),
     RecentCol("Client", 12, False, lambda r: r["client"]),
-    RecentCol("Model", None, False, lambda r: r["model"]),
+    RecentCol("Model", 0, False, lambda r: r["model"], flex=True),
     RecentCol("API", 7, False, _api),
     RecentCol("Input", 8, True, lambda r: fmt(r["input_tokens"])),
     RecentCol("Output", 7, True, lambda r: fmt(r["output_tokens"])),
@@ -412,14 +413,14 @@ class Dashboard:
     def _recent(self, cv, th, y, h):
         cols = RECENT_COLS
         for drop in RECENT_DROP_ORDER:
-            if sum((c.width or 0) + 1 for c in cols) + RECENT_MODEL_MIN <= cv.w - 2:
+            if sum(c.width + 1 for c in cols) + RECENT_MODEL_MIN <= cv.w - 2:
                 break
             cols = [c for c in cols if c.header != drop]
-        model_w = max(8, min(28, cv.w - 2 - sum((c.width or 0) + 1 for c in cols) - 1))
-        cols = [c._replace(width=model_w) if c.width is None else c for c in cols]
-        cv.put(y, 1, "".join(fit(name, cw, right) + " " for name, cw, right, _ in cols), th.dim)
+        model_w = max(8, min(28, cv.w - 2 - sum(c.width + 1 for c in cols) - 1))
+        cols = [c._replace(width=model_w) if c.flex else c for c in cols]
+        cv.put(y, 1, "".join(fit(c.header, c.width, c.right) + " " for c in cols), th.dim)
         for i, r in enumerate(self.data["recent"][self.scroll:self.scroll + max(0, h - 1)]):
-            line = "".join(fit(get(r), cw, right) + " " for _, cw, right, get in cols)
+            line = "".join(fit(c.get(r), c.width, c.right) + " " for c in cols)
             cv.put(y + 1 + i, 1, line, th.err if _failed(r) else "")
 
     def key(self, k):
