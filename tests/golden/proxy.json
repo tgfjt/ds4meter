@@ -1,0 +1,325 @@
+{
+ "recorded rows": [
+  [
+   "/v1/chat/completions",
+   "dsv4",
+   "codex_cli_rs",
+   0,
+   200,
+   11,
+   3,
+   4,
+   2,
+   0,
+   null
+  ],
+  [
+   "/v1/chat/completions",
+   "deepseek-v4-flash",
+   "codex_cli_rs",
+   1,
+   200,
+   12,
+   6,
+   null,
+   null,
+   1,
+   null
+  ],
+  [
+   "/v1/completions",
+   "dsv4",
+   "codex_cli_rs",
+   0,
+   200,
+   11,
+   3,
+   4,
+   2,
+   0,
+   null
+  ],
+  [
+   "/v1/completions",
+   "deepseek-v4-flash",
+   "codex_cli_rs",
+   1,
+   200,
+   12,
+   6,
+   null,
+   null,
+   1,
+   null
+  ],
+  [
+   "/v1/responses",
+   "dsv4",
+   "codex_cli_rs",
+   0,
+   200,
+   100,
+   20,
+   50,
+   5,
+   0,
+   null
+  ],
+  [
+   "/v1/responses",
+   "dsv4",
+   "codex_cli_rs",
+   1,
+   200,
+   30,
+   9,
+   null,
+   null,
+   1,
+   null
+  ],
+  [
+   "/v1/messages",
+   "dsv4",
+   "codex_cli_rs",
+   0,
+   200,
+   100,
+   7,
+   90,
+   null,
+   0,
+   null
+  ],
+  [
+   "/v1/messages",
+   "dsv4",
+   "codex_cli_rs",
+   1,
+   200,
+   25,
+   42,
+   20,
+   null,
+   1,
+   null
+  ],
+  [
+   "/v1/chat/completions",
+   "m",
+   "claude-cli",
+   1,
+   200,
+   12,
+   6,
+   null,
+   null,
+   1,
+   null
+  ],
+  [
+   "/v1/messages",
+   "m",
+   "claude-cli",
+   0,
+   502,
+   null,
+   null,
+   null,
+   null,
+   0,
+   "[Errno 61] Connection refused"
+  ]
+ ],
+ "response /v1/chat/completions stream=False": {
+  "body": "{\"model\": \"dsv4\", \"choices\": [{}], \"usage\": {\"prompt_tokens\": 11, \"completion_tokens\": 3, \"prompt_tokens_details\": {\"cached_tokens\": 4}, \"completion_tokens_details\": {\"reasoning_tokens\": 2}}}",
+  "headers": [
+   "Content-Length: 191",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/chat/completions stream=True": {
+  "body": "23\r\ndata: {\"choices\": [{\"delta\": {}}]}\n\r\n1\r\n\n\r\nd\r\ndata: [DONE]\n\r\n1\r\n\n\r\n0\r\n\r\n",
+  "headers": [
+   "Content-Type: text/event-stream",
+   "Transfer-Encoding: chunked"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/completions stream=False": {
+  "body": "{\"model\": \"dsv4\", \"choices\": [{}], \"usage\": {\"prompt_tokens\": 11, \"completion_tokens\": 3, \"prompt_tokens_details\": {\"cached_tokens\": 4}, \"completion_tokens_details\": {\"reasoning_tokens\": 2}}}",
+  "headers": [
+   "Content-Length: 191",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/completions stream=True": {
+  "body": "23\r\ndata: {\"choices\": [{\"delta\": {}}]}\n\r\n1\r\n\n\r\nd\r\ndata: [DONE]\n\r\n1\r\n\n\r\n0\r\n\r\n",
+  "headers": [
+   "Content-Type: text/event-stream",
+   "Transfer-Encoding: chunked"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/messages stream=False": {
+  "body": "{\"model\": \"dsv4\", \"usage\": {\"input_tokens\": 10, \"cache_read_input_tokens\": 90, \"output_tokens\": 7}}",
+  "headers": [
+   "Content-Length: 99",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/messages stream=True": {
+  "body": "15\r\nevent: message_start\n\r\n8f\r\ndata: {\"type\": \"message_start\", \"message\": {\"model\": \"dsv4\", \"usage\": {\"input_tokens\": 5, \"cache_read_input_tokens\": 20, \"output_tokens\": 1}}}\n\r\n1\r\n\n\r\n1b\r\nevent: content_block_delta\n\r\n26\r\ndata: {\"type\": \"content_block_delta\"}\n\r\n1\r\n\n\r\n15\r\nevent: message_delta\n\r\n40\r\ndata: {\"type\": \"message_delta\", \"usage\": {\"output_tokens\": 42}}\n\r\n1\r\n\n\r\n0\r\n\r\n",
+  "headers": [
+   "Content-Type: text/event-stream",
+   "Transfer-Encoding: chunked"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/responses stream=False": {
+  "body": "{\"model\": \"dsv4\", \"usage\": {\"input_tokens\": 100, \"input_tokens_details\": {\"cached_tokens\": 50}, \"output_tokens\": 20, \"output_tokens_details\": {\"reasoning_tokens\": 5}}}",
+  "headers": [
+   "Content-Length: 167",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response /v1/responses stream=True": {
+  "body": "2d\r\ndata: {\"type\": \"response.output_text.delta\"}\n\r\n1\r\n\n\r\n77\r\ndata: {\"type\": \"response.completed\", \"response\": {\"model\": \"dsv4\", \"usage\": {\"input_tokens\": 30, \"output_tokens\": 9}}}\n\r\n1\r\n\n\r\n0\r\n\r\n",
+  "headers": [
+   "Content-Type: text/event-stream",
+   "Transfer-Encoding: chunked"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response chat client asked for usage": {
+  "body": "23\r\ndata: {\"choices\": [{\"delta\": {}}]}\n\r\n1\r\n\n\r\n4e\r\ndata: {\"choices\": [], \"usage\": {\"prompt_tokens\": 12, \"completion_tokens\": 6}}\n\r\n1\r\n\n\r\nd\r\ndata: [DONE]\n\r\n1\r\n\n\r\n0\r\n\r\n",
+  "headers": [
+   "Content-Type: text/event-stream",
+   "Transfer-Encoding: chunked"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response passthrough GET": {
+  "body": "{\"data\":[]}",
+  "headers": [
+   "Content-Length: 11",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 200 OK"
+ },
+ "response upstream 500": {
+  "body": "{\"error\":\"boom\"}",
+  "headers": [
+   "Content-Length: 16",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 500 Internal Server Error"
+ },
+ "response upstream down": {
+  "body": "{\"error\": \"upstream: [Errno 61] Connection refused\"}",
+  "headers": [
+   "Content-Length: 52",
+   "Content-Type: application/json"
+  ],
+  "status": "HTTP/1.1 502 Bad Gateway"
+ },
+ "sent upstream": [
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": false
+   },
+   "method": "POST",
+   "path": "/v1/chat/completions"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": true,
+    "stream_options": {
+     "include_usage": true
+    }
+   },
+   "method": "POST",
+   "path": "/v1/chat/completions"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": false
+   },
+   "method": "POST",
+   "path": "/v1/completions"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": true,
+    "stream_options": {
+     "include_usage": true
+    }
+   },
+   "method": "POST",
+   "path": "/v1/completions"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": false
+   },
+   "method": "POST",
+   "path": "/v1/responses"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": true
+   },
+   "method": "POST",
+   "path": "/v1/responses"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": false
+   },
+   "method": "POST",
+   "path": "/v1/messages"
+  },
+  {
+   "body": {
+    "model": "deepseek-v4-flash",
+    "stream": true
+   },
+   "method": "POST",
+   "path": "/v1/messages"
+  },
+  {
+   "body": {
+    "model": "m",
+    "stream": true,
+    "stream_options": {
+     "include_usage": true
+    }
+   },
+   "method": "POST",
+   "path": "/v1/chat/completions"
+  },
+  {
+   "body": {},
+   "method": "GET",
+   "path": "/v1/models"
+  },
+  {
+   "body": {
+    "model": "m"
+   },
+   "method": "POST",
+   "path": "/v1/fail"
+  }
+ ]
+}
