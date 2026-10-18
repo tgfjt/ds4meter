@@ -66,6 +66,12 @@ class Layout(unittest.TestCase):
             self.assertRegex(line, r"Since \d{4}-\d\d-\d\d: [\d,]+ tok", name)
             self.assertTrue(any("· 0  ░ <100K  ▒ <500K  ▓ <2M  █ 2M+" in l for l in lines), f"{name}: heatmap legend")
 
+    def test_scroll_position_is_never_overwritten(self):
+        for name, lines in self.screens():
+            if name.startswith("seed"):
+                tab = next(l for l in lines if "By client / model" in l)
+                self.assertRegex(tab, r"\d+-\d+ / 500  \(j/k\)", name)
+
     def test_month_labels_are_english_abbreviations(self):
         months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
         for name, lines in self.screens():
@@ -121,6 +127,28 @@ class Outcome(unittest.TestCase):
                 self.assertNotIn(ERR, canceled[0], f"w={w}: canceled row is not red")
                 failed = [l for l in lines if " pi " in strip_ansi(l) and "canceled" not in strip_ansi(l)]
                 self.assertTrue(failed and ERR in failed[0], f"w={w}: failed row stays red")
+
+
+class Heights(unittest.TestCase):
+    def test_lower_pane_shows_rows_at_every_supported_height(self):
+        with tmpdir() as d, frozen_clock():
+            for dataset in ("one", "seed"):
+                store = make_store(dataset, d)
+                for days in (1, 7, 30, 365):
+                    dash = tui.Dashboard(store, days)
+                    for pane in ("recent", "breakdown"):
+                        dash.lower = pane
+                        for w in (60, 80, 120):
+                            for h in range(20, 61):
+                                cv = tui.Canvas(h, w)
+                                dash.draw(cv, tui.Theme(False))
+                                lines = cv.text().split("\n")
+                                name = f"{dataset} {days}d {pane} {w}x{h}"
+                                self.assertTrue(lines[-1].startswith(" 1-5 period"), f"{name}: footer")
+                                tab = next((i for i, l in enumerate(lines) if "By client / model" in l), None)
+                                self.assertIsNotNone(tab, f"{name}: lower pane tab line")
+                                rows = [l for l in lines[tab + 2:-1] if l.strip()]
+                                self.assertTrue(rows, f"{name}: lower pane has at least one row")
 
 
 class Scroll(unittest.TestCase):

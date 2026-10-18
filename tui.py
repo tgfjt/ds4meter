@@ -226,6 +226,7 @@ PERIOD_COLS = [
 ]
 PERIOD_UNITS = ((1, "hour", "Hourly"), (31, "day", "Daily"), (120, "week", "Weekly"), (None, "month", "Monthly"))
 LOWER_MIN_ROWS = 7
+HEATMAP_MAX_ROWS = 12
 
 
 class Dashboard:
@@ -252,7 +253,10 @@ class Dashboard:
             return
         rows = fill_days(self.data["daily"], self.days)
         y = self._summary(cv, th, 2, rows)
-        y = self._heatmap(cv, th, y + 1) + 1
+        if cv.h - y >= HEATMAP_MAX_ROWS + LOWER_MIN_ROWS + 2:
+            y = self._heatmap(cv, th, y + 1) + 1
+        else:
+            y += 1
         y = self._period_table(cv, th, y, rows)
         self._lower(cv, th, y + 1)
         cv.put(cv.h - 1, 1, "1-5 period   tab pane   j/k scroll   r refresh   q quit", th.dim)
@@ -382,10 +386,12 @@ class Dashboard:
             visible = avail - 1 if cv.w // 2 >= 40 else min(max(2, avail // 2), avail - max(2, avail // 2)) - 1
         self.scroll = max(0, min(self.scroll, total - max(1, visible)))
         if total > visible > 0:
-            cv.put(y, x + 2, f"{self.scroll + 1}-{min(total, self.scroll + visible)} / {total}  (j/k)", th.dim)
+            x += 2 + cv.put(y, x + 2, f"{self.scroll + 1}-{min(total, self.scroll + visible)} / {total}  (j/k)", th.dim)
         y += 1
         if self.lower == "recent":
-            cv.put(y - 1, cv.w - 15, fit("unit: tokens", 14, True), th.dim)
+            unit = "unit: tokens"
+            if x + 2 <= cv.w - 1 - len(unit):
+                cv.put(y - 1, cv.w - 1 - len(unit), unit, th.dim)
             self._recent(cv, th, y, avail)
             return
         half = cv.w // 2
