@@ -40,6 +40,44 @@ class DashboardSnapshot(unittest.TestCase):
                     self.assertLessEqual(tui.width(line), w, f"{key}: {line!r}")
 
 
+class Layout(unittest.TestCase):
+    """端末幅を 1 刻みで変えても、固定の文言が欠けたり重なったりしない。"""
+
+    def screens(self):
+        with tmpdir() as d, frozen_clock():
+            for dataset in ("one", "levels", "seed"):
+                dash = tui.Dashboard(make_store(dataset, d), 30)
+                for w in range(60, 141):
+                    cv = tui.Canvas(40, w)
+                    dash.draw(cv, tui.Theme(False))
+                    yield f"{dataset} w={w}", cv.text().split("\n")
+
+    def test_heatmap_total_and_legend_are_never_cut(self):
+        for name, lines in self.screens():
+            line = next(l for l in lines if "から今日まで" in l)
+            self.assertRegex(line, r"\d{4}/\d\d/\d\d から今日まで [\d,]+ tok", name)
+            self.assertTrue(any("· 0  ░ <100K  ▒ <500K  ▓ <2M  █ 2M+" in l for l in lines), f"{name}: heatmap legend")
+
+    def test_month_labels_are_english_abbreviations(self):
+        months = {"Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"}
+        for name, lines in self.screens():
+            row = next(i for i, l in enumerate(lines) if l.startswith("Mon")) - 1
+            words = lines[row].split()
+            self.assertTrue(words and set(words) <= months, f"{name}: {lines[row]!r}")
+
+    def test_table_legend_is_whole_or_absent(self):
+        for name, lines in self.screens():
+            header = next(l for l in lines if l.startswith((" Daily", " Weekly", " Monthly", " Hourly")))
+            self.assertNotIn("…", header, name)
+
+    def test_weekday_labels_are_separated_from_cells(self):
+        for name, lines in self.screens():
+            labelled = [l for l in lines if l.startswith(("Mon", "Wed", "Fri"))]
+            self.assertEqual(len(labelled), 3, f"{name}: weekday labels start at column 0")
+            for l in labelled:
+                self.assertRegex(l, r"^(Mon|Wed|Fri) [·░▒▓█]", name)
+
+
 class Scroll(unittest.TestCase):
     def screen(self, dash, h=30):
         cv = tui.Canvas(h, 100)

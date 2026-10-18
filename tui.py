@@ -35,6 +35,7 @@ CURSOR_HIDE, CURSOR_SHOW = "\x1b[?25l", "\x1b[?25h"
 RESET = "\x1b[0m"
 ARROWS = {"\x1b[A": "up", "\x1bOA": "up", "\x1b[B": "down", "\x1bOB": "down"}
 WEEKDAYS = "月火水木金土日"
+MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 SHORT_EP = {"chat/completions": "chat", "completions": "compl", "responses": "resp", "messages": "msgs"}
 REFRESH_SEC = 5
 KEYS = ("requests", "input_tokens", "output_tokens", "cached_tokens", "reasoning_tokens")
@@ -306,7 +307,7 @@ class Dashboard:
             monday = start + dt.timedelta(days=c * 7)
             x = x0 + c * 2
             if (c == 0 or monday.month != (monday - dt.timedelta(days=7)).month) and x >= last_label_end:
-                last_label_end = x + cv.put(y, x, f"{monday.month}月", th.dim) + 1
+                last_label_end = x + cv.put(y, x, MONTHS[monday.month - 1], th.dim) + 1
             for r in range(7):
                 day = monday + dt.timedelta(days=r)
                 if day > today:
@@ -315,8 +316,8 @@ class Dashboard:
                 level = 0 if not v else 1 + sum(v >= step for step in DAILY_TOKEN_THRESHOLDS)
                 ch, attr = th.heat[level]
                 cv.put(y + 1 + r, x, ch, attr)
-        for r, name in ((0, "月"), (2, "水"), (4, "金")):
-            cv.put(y + 1 + r, 1, name, th.dim)
+        for r, name in ((0, "Mon"), (2, "Wed"), (4, "Fri")):
+            cv.put(y + 1 + r, 0, name, th.dim)
         y += 8
         span = sum(by_day.get((start + dt.timedelta(days=i)).isoformat(), 0) for i in range((today - start).days + 1))
         total = [(f"{start:%Y/%m/%d} から今日まで ", th.dim), (fmt(span), th.bold), (" tok", th.dim)]

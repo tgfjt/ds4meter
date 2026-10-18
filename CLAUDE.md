@@ -21,6 +21,7 @@ cd tests && python3 -m unittest
 | 今の選択: 実行時のコードは Python 標準ライブラリだけで書く。運用者に決められたルールではなく、Rust が入っているので見直してよい | `tests/test_repo_rules.py` の `test_stdlib_only`（選択を変えるときはこのテストも変える） |
 | CLI フラグを足す前に運用者に聞く。調整値はまずコード内の定数にする。`APPROVED_FLAGS` は運用者の承認なしに変えない | `tests/test_repo_rules.py` の `test_no_unapproved_cli_flags` |
 | リファクタは色付き出力と両方の下段タブを含めて挙動を変えない | `tests/test_dashboard.py` と `tests/test_proxy.py` の golden |
+| 画面の不具合を直すときは、先に不具合で失敗するテストを書く。`UPDATE_GOLDEN=1` での記録し直しは修正の確認にならない | `tests/test_dashboard.py` の `Layout`（幅 60〜140 の全幅で文言の欠けと重なりを検査）。新しい種類の不具合は判断 |
 | クライアントの設定変更を要求しない。プロキシは `serve.py` 経由で元のポートを引き継ぐ | なし（判断） |
 | 画面の数値には単位を出す。段階分けは固定のしきい値にし、相対値にしない。空の画面では次にやることを出す | なし（判断） |
 | UI は TUI だけ。Web UI は作らない | なし（判断） |
