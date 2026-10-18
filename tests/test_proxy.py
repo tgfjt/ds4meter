@@ -105,6 +105,7 @@ def call(method, path, body=None, ua="claude-cli/2.1.3 (external, cli)"):
     raw = b""
     while chunk := client.recv(65536):
         raw += chunk
+    client.close()
     head, _, rest = raw.decode().partition("\r\n\r\n")
     status = head.split("\r\n")[0]
     headers = sorted(h for h in head.split("\r\n")[1:] if not h.startswith(("Date:", "Server:")))
