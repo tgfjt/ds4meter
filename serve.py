@@ -1,11 +1,10 @@
 #!/usr/bin/env python3
-"""ds4-server をいつものコマンドのまま起動し、その前にプロキシを透過的に挟む。
+"""Run ds4-server behind the ds4meter proxy with its usual command line.
 
     python3 serve.py ./ds4-server --ctx 100000 --host 0.0.0.0 --port 8001
 
-ds4-server に渡した --host/--port はプロキシが引き取り、ds4-server 本体は
-127.0.0.1:(port + 10000) に下げて起動する。クライアントは今まで通り :8001 に
-つなぐだけで記録される。Ctrl-C で両方止まる。
+The proxy listens on the given --host/--port and starts ds4-server on
+127.0.0.1:(port + 10000). Ctrl-C stops both.
 """
 import errno
 import os
@@ -54,8 +53,8 @@ def main():
     try:
         srv = proxy.make_server(f"{host}:{port}", f"http://127.0.0.1:{backend_port}", db)
     except OSError as e:
-        hint = "\n(既存の ds4-server がまだ動いていませんか？)" if e.errno == errno.EADDRINUSE else ""
-        sys.exit(f"{host}:{port} を開けません: {e}{hint}")
+        hint = "\nIs another ds4-server still running on this port?" if e.errno == errno.EADDRINUSE else ""
+        sys.exit(f"Cannot listen on {host}:{port}: {e}{hint}")
 
     cmd = rest + ["--host", "127.0.0.1", "--port", str(backend_port)]
     print("backend  " + " ".join(cmd), flush=True)

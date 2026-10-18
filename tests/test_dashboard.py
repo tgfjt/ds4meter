@@ -1,3 +1,6 @@
+import re
+import subprocess
+import sys
 import unittest
 from unittest import mock
 
@@ -54,8 +57,8 @@ class Layout(unittest.TestCase):
 
     def test_heatmap_total_and_legend_are_never_cut(self):
         for name, lines in self.screens():
-            line = next(l for l in lines if "から今日まで" in l)
-            self.assertRegex(line, r"\d{4}/\d\d/\d\d から今日まで [\d,]+ tok", name)
+            line = next(l for l in lines if "Since " in l)
+            self.assertRegex(line, r"Since \d{4}-\d\d-\d\d: [\d,]+ tok", name)
             self.assertTrue(any("· 0  ░ <100K  ▒ <500K  ▓ <2M  █ 2M+" in l for l in lines), f"{name}: heatmap legend")
 
     def test_month_labels_are_english_abbreviations(self):
@@ -76,6 +79,23 @@ class Layout(unittest.TestCase):
             self.assertEqual(len(labelled), 3, f"{name}: weekday labels start at column 0")
             for l in labelled:
                 self.assertRegex(l, r"^(Mon|Wed|Fri) [·░▒▓█]", name)
+
+
+class English(unittest.TestCase):
+    CJK = re.compile(r"[\u3000-\u30ff\u4e00-\u9fff\uff00-\uffef]")
+
+    def test_screens_have_no_japanese(self):
+        for key, screen in render_all().items():
+            self.assertIsNone(self.CJK.search(screen), f"{key}: {self.CJK.findall(screen)[:5]}")
+
+    def test_help_and_errors_have_no_japanese(self):
+        outputs = [subprocess.run([sys.executable, str(REPO / s), "--help"], capture_output=True, text=True)
+                   for s in ("serve.py", "proxy.py", "tui.py")]
+        outputs.append(subprocess.run([sys.executable, str(REPO / "tui.py"), "--db", "/nonexistent.db"],
+                                      capture_output=True, text=True))
+        for r in outputs:
+            text = r.stdout + r.stderr
+            self.assertIsNone(self.CJK.search(text), f"{r.args}: {self.CJK.findall(text)[:5]}")
 
 
 class Scroll(unittest.TestCase):

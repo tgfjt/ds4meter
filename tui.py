@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
-"""usage.db を読んでターミナルにダッシュボードを出す TUI。
+"""Terminal dashboard for usage.db.
 
-    python3 tui.py              # 対話モード
-    python3 tui.py --once       # 1回だけテキストで出力（色なし）
+    python3 tui.py           # interactive
+    python3 tui.py --once    # print one plain-text frame
 
-キー: 1/2/3/4/5 = 1/7/30/90/365日  tab = 下段切替  j/k ↑/↓ = 下段スクロール  r = 更新  q = 終了
+Keys: 1-5 period (1/7/30/90/365 days), tab lower pane, j/k or up/down scroll, r refresh, q quit.
 
-curses は端末のロケール次第で全角・記号の幅を誤るので使わず、
-画面バッファを ANSI エスケープで行ごとに書き出している。
+It writes whole ANSI lines instead of using curses, because curses miscounts the
+width of ambiguous-width glyphs under some locales.
 """
 import argparse
 import datetime as dt
@@ -34,7 +34,7 @@ ALT_SCREEN_ON, ALT_SCREEN_OFF = "\x1b[?1049h", "\x1b[?1049l"
 CURSOR_HIDE, CURSOR_SHOW = "\x1b[?25l", "\x1b[?25h"
 RESET = "\x1b[0m"
 ARROWS = {"\x1b[A": "up", "\x1bOA": "up", "\x1b[B": "down", "\x1bOB": "down"}
-WEEKDAYS = "月火水木金土日"
+WEEKDAYS = "Mon Tue Wed Thu Fri Sat Sun".split()
 MONTHS = "Jan Feb Mar Apr May Jun Jul Aug Sep Oct Nov Dec".split()
 SHORT_EP = {"chat/completions": "chat", "completions": "compl", "responses": "resp", "messages": "msgs"}
 REFRESH_SEC = 5
@@ -91,7 +91,7 @@ def group(rows, unit):
         d = dt.date.fromisoformat(r["day"])
         if unit == "week":
             start = d - dt.timedelta(days=d.weekday())
-            key, label = start.isoformat(), f"{start:%m/%d}〜"
+            key, label = start.isoformat(), f"wk {start:%m/%d}"
         elif unit == "month":
             key, label = f"{d:%Y-%m}", f"{d:%Y-%m}"
         else:
@@ -160,21 +160,20 @@ class Theme:
 
 
 EMPTY_GUIDE = [
-    ("まだ記録がありません", "bold"),
+    ("No records yet", "bold"),
     ("", ""),
-    ("ds4-server を serve.py 経由で起動すると記録が始まります。", ""),
-    ("クライアント側の設定はそのままで OK です。", ""),
+    ("Recording starts when ds4-server runs through serve.py.", ""),
     ("", ""),
-    ("1. ds4-server をいったん止めて、いつものコマンドの頭に付けて起動", "bold"),
+    ("1. Restart ds4-server with serve.py in front of its command", "bold"),
     (f"     python3 {HERE / 'serve.py'} \\", "dim"),
-    ("       ./ds4-server <いつもの引数> --port 8001", "dim"),
+    ("       ./ds4-server <your arguments> --port 8001", "dim"),
     ("", ""),
-    ("2. 試しに 1 回投げてみる", "bold"),
+    ("2. Send one request", "bold"),
     ("     curl -s http://127.0.0.1:8001/v1/chat/completions \\", "dim"),
     ("       -H 'Content-Type: application/json' \\", "dim"),
     ("       -d '{\"messages\":[{\"role\":\"user\",\"content\":\"hi\"}]}'", "dim"),
     ("", ""),
-    ("記録されると数秒でこの画面が切り替わります。", ""),
+    ("The dashboard appears a few seconds after the first record.", ""),
 ]
 
 
@@ -320,7 +319,7 @@ class Dashboard:
             cv.put(y + 1 + r, 0, name, th.dim)
         y += 8
         span = sum(by_day.get((start + dt.timedelta(days=i)).isoformat(), 0) for i in range((today - start).days + 1))
-        total = [(f"{start:%Y/%m/%d} から今日まで ", th.dim), (fmt(span), th.bold), (" tok", th.dim)]
+        total = [(f"Since {start:%Y-%m-%d}: ", th.dim), (fmt(span), th.bold), (" tok", th.dim)]
         labels = ["0"] + [f"<{compact(b)}" for b in DAILY_TOKEN_THRESHOLDS] + [f"{compact(DAILY_TOKEN_THRESHOLDS[-1])}+"]
         legend = []
         for (ch, attr), label in zip(th.heat, labels):
@@ -345,7 +344,7 @@ class Dashboard:
         bar_w = max(0, cv.w - bar_x - 1)
         cv.spans(y, 1, [(fit(title, label_w), th.bold)] + [(" " + fit(name, cw, True), th.dim) for name, cw, _ in cols])
         legend = [("■", th.inp), (" in  ", th.dim), ("■", th.out), (" out", th.dim)]
-        for extra in ([], [("   単位: tokens", th.dim)]):
+        for extra in ([], [("   unit: tokens", th.dim)]):
             if sum(width(t) for t, _ in legend + extra) <= bar_w:
                 legend += extra
             else:
@@ -366,10 +365,10 @@ class Dashboard:
                 cv.spans(y, bar_x, [("█" * bi, th.inp), ("█" * bo, th.out)])
             y += 1
         if not groups:
-            cv.put(y, 1, "この期間の記録はありません", th.dim)
+            cv.put(y, 1, "No records in this period", th.dim)
             y += 1
         elif len(groups) > len(shown):
-            cv.put(y, 1, f"… ほか {len(groups) - len(shown)} 件", th.dim)
+            cv.put(y, 1, f"… {len(groups) - len(shown)} more", th.dim)
             y += 1
         return y
 
@@ -389,7 +388,7 @@ class Dashboard:
             cv.put(y, x + 2, f"{self.scroll + 1}-{min(total, self.scroll + visible)} / {total}  (j/k)", th.dim)
         y += 1
         if self.lower == "recent":
-            cv.put(y - 1, cv.w - 15, fit("単位: tokens", 14, True), th.dim)
+            cv.put(y - 1, cv.w - 15, fit("unit: tokens", 14, True), th.dim)
             self._recent(cv, th, y, avail)
             return
         half = cv.w // 2
@@ -405,7 +404,7 @@ class Dashboard:
         name_w = max(8, w - 6 - 10 - 10 - 3)
         cv.put(y, x, fit(title, name_w) + fit("Req", 6, True) + fit("Input", 10, True) + fit("Output", 10, True), th.dim)
         if not rows:
-            cv.put(y + 1, x, "この期間の記録はありません", th.dim)
+            cv.put(y + 1, x, "No records in this period", th.dim)
         for i, r in enumerate(rows[self.scroll:self.scroll + max(0, h - 1)]):
             cv.put(y + 1 + i, x, fit(r["name"], name_w) + fit(fmt(r["requests"]), 6, True)
                    + fit(fmt(r["input_tokens"]), 10, True) + fit(fmt(r["output_tokens"]), 10, True))
@@ -504,7 +503,7 @@ def main():
     args = ap.parse_args()
 
     if not Path(args.db).exists():
-        sys.exit(f"{args.db} がありません。先に serve.py で ds4-server を起動してください。")
+        sys.exit(f"{args.db} not found. Start ds4-server through serve.py first.")
     dash = Dashboard(Store(args.db), args.days)
     if args.once:
         w, h = (int(v) for v in args.size.split("x"))

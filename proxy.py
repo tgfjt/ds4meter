@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""ds4-server の前段に置くトークン計測プロキシ。
+"""Token-metering proxy for ds4-server.
 
-全リクエストを upstream へ素通しし、
-/v1/chat/completions, /v1/completions, /v1/responses, /v1/messages の
-レスポンス（ストリーミング含む）から usage を拾って SQLite に記録する。
-記録は tui.py で見る。
+It forwards every request to the upstream unchanged and records usage from
+/v1/chat/completions, /v1/completions, /v1/responses and /v1/messages
+responses, streaming included, into SQLite. View the records with tui.py.
 
     python3 proxy.py --listen 8002 --upstream http://127.0.0.1:8001
 """

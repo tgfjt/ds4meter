@@ -1,6 +1,6 @@
 # ds4meter
 
-Records ds4-server token usage and shows it in the terminal. Clients keep their existing URL.
+Records ds4-server token usage and shows it in the terminal.
 
 ```sh
 python3 path/to/ds4meter/serve.py ./ds4-server --port 8001
