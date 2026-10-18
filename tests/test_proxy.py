@@ -40,7 +40,6 @@ def sse(events):
 
 
 def upstream_reply(path, req):
-    """ds4-server の代わりに各 wire format の典型的な応答を返す。"""
     if path == "/v1/models":
         return FakeResponse(200, "application/json", b'{"data":[]}')
     if path == "/v1/fail":

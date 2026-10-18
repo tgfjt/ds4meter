@@ -194,7 +194,7 @@ def _tok_per_sec(r):
 
 class RecentCol(NamedTuple):
     header: str
-    width: Optional[int]  # None は残り幅で伸縮
+    width: Optional[int]
     right: bool
     get: Callable
 
@@ -433,7 +433,7 @@ class Dashboard:
         elif k == "\t":
             self.lower, self.scroll = ("breakdown" if self.lower == "recent" else "recent"), 0
         elif k in ("j", "down"):
-            self.scroll += 1  # 上限は描画時に丸める
+            self.scroll += 1
         elif k in ("k", "up"):
             self.scroll = max(0, self.scroll - 1)
         return True
@@ -450,7 +450,6 @@ def read_keys(fd, timeout):
             keys.append(ARROWS[seq])
             i += 3
         elif data[i] == "\x1b":
-            # 単独の ESC だけを終了扱いにし、それ以外の未知のエスケープ列は読み捨てる
             if i + 1 == len(data):
                 keys.append("esc")
             break

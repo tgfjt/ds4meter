@@ -62,7 +62,7 @@ def _responses_or_anthropic_usage(u):
     out = {}
     if "input_tokens" in u:
         inp = _int(u.get("input_tokens"))
-        # Anthropic の input_tokens はキャッシュ分を含まないので足し戻す
+        # Anthropic input_tokens excludes cached tokens, so add them back
         extra = sum(_int(u.get(k)) or 0 for k in ("cache_read_input_tokens", "cache_creation_input_tokens"))
         out["input_tokens"] = inp + extra if inp is not None else None
     if "output_tokens" in u:
@@ -84,7 +84,7 @@ def usage_from_obj(u):
 def usage_from_json_body(data):
     if not isinstance(data, dict):
         return {}, None
-    if isinstance(data.get("response"), dict):  # Responses API のイベント
+    if isinstance(data.get("response"), dict):
         data = data["response"]
     return usage_from_obj(data.get("usage")), data.get("model")
 
@@ -101,7 +101,7 @@ class StreamUsage:
             self.model = msg.get("model") or self.model
             self.usage.update(usage_from_obj(msg.get("usage")))
             return
-        if typ == "message_delta":  # Anthropic: output_tokens は累積値
+        if typ == "message_delta":  # Anthropic: output_tokens is cumulative
             self.usage.update(usage_from_obj(data.get("usage")))
             return
         u, model = usage_from_json_body(data)
@@ -210,7 +210,7 @@ class Handler(BaseHTTPRequestHandler):
             except ValueError:
                 pass
         stream = bool(req_json and req_json.get("stream"))
-        # Chat/Completions のストリームは usage を要求しないと返ってこないので注入する
+        # Chat/Completions streams only report usage when asked, so request it
         if stream and path in ("/v1/chat/completions", "/v1/completions"):
             opts = req_json.get("stream_options") or {}
             if not opts.get("include_usage"):

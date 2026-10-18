@@ -44,8 +44,6 @@ class DashboardSnapshot(unittest.TestCase):
 
 
 class Layout(unittest.TestCase):
-    """端末幅を 1 刻みで変えても、固定の文言が欠けたり重なったりしない。"""
-
     def screens(self):
         with tmpdir() as d, frozen_clock():
             for dataset in ("one", "levels", "seed"):

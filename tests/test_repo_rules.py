@@ -5,7 +5,6 @@ import unittest
 
 from support import REPO
 
-# 運用者が承認した CLI フラグ。この一覧の変更は運用者の承認が要る
 APPROVED_FLAGS = {
     "proxy.py": {"-h", "--help", "--listen", "--upstream", "--db"},
     "tui.py": {"-h", "--help", "--db", "--days", "--once", "--size"},

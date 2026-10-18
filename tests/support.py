@@ -78,7 +78,6 @@ def make_store(dataset, tmpdir):
 
 
 def check_golden(case, name, actual):
-    """UPDATE_GOLDEN=1 で記録し直す。差分があれば最初に食い違ったキーで失敗させる。"""
     path = GOLDEN / f"{name}.json"
     if os.environ.get("UPDATE_GOLDEN"):
         GOLDEN.mkdir(exist_ok=True)
