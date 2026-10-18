@@ -4,7 +4,14 @@ import sys
 import unittest
 from unittest import mock
 
-from support import DATASETS, REPO, check_golden, frozen_clock, make_store, tmpdir, tui
+from support import DATASETS, NOW, REPO, check_golden, frozen_clock, make_store, tmpdir, tui
+
+ERR = "\x1b[" + tui.Theme(True).err + "m"
+
+
+def strip_ansi(s):
+    return re.sub(r"\x1b\[[0-9;]*m", "", s)
+
 
 SIZES = ((60, 20), (70, 30), (80, 30), (120, 44))
 ANSI_SIZE = (80, 30)
@@ -94,6 +101,26 @@ class English(unittest.TestCase):
         for r in outputs:
             text = r.stdout + r.stderr
             self.assertIsNone(self.CJK.search(text), f"{r.args}: {self.CJK.findall(text)[:5]}")
+
+
+class Outcome(unittest.TestCase):
+    def test_canceled_is_visible_and_not_red_at_every_width(self):
+        with tmpdir() as d, frozen_clock():
+            store = make_store("one", d)
+            store.insert({"ts": NOW + 60, "endpoint": "/v1/chat/completions", "model": "m", "client": "pi", "stream": 1,
+                          "status": 200, "duration_ms": 23677, "error": "client disconnected: [Errno 32] Broken pipe"})
+            store.insert({"ts": NOW + 120, "endpoint": "/v1/messages", "model": "m", "client": "pi", "stream": 0,
+                          "status": 500, "duration_ms": 10, "error": "boom"})
+            dash = tui.Dashboard(store, 1)
+            for w in range(60, 141):
+                cv = tui.Canvas(40, w)
+                dash.draw(cv, tui.Theme(True))
+                lines = cv.ansi_lines()
+                canceled = [l for l in lines if " pi " in strip_ansi(l) and "canceled" in strip_ansi(l)]
+                self.assertEqual(len(canceled), 1, f"w={w}: canceled row shows 'canceled'")
+                self.assertNotIn(ERR, canceled[0], f"w={w}: canceled row is not red")
+                failed = [l for l in lines if " pi " in strip_ansi(l) and "canceled" not in strip_ansi(l)]
+                self.assertTrue(failed and ERR in failed[0], f"w={w}: failed row stays red")
 
 
 class Scroll(unittest.TestCase):

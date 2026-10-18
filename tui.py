@@ -22,7 +22,7 @@ import unicodedata
 from pathlib import Path
 from typing import Callable, NamedTuple
 
-from proxy import Store
+from proxy import Store, request_outcome
 
 HERE = Path(__file__).resolve().parent
 PERIODS = {"1": (1, "1d"), "2": (7, "7d"), "3": (30, "30d"), "4": (90, "90d"), "5": (365, "1y")}
@@ -180,11 +180,7 @@ EMPTY_GUIDE = [
 def _api(r):
     ep = r["endpoint"].replace("/v1/", "")
     ep = SHORT_EP.get(ep, ep) + (" ~" if r["stream"] else "")
-    return f"{r['status'] or 'ERR'} {ep}" if _failed(r) else ep
-
-
-def _failed(r):
-    return (r["status"] or 0) >= 400 or r["error"]
+    return f"{r['status'] or 'ERR'} {ep}" if request_outcome(r) == "failed" else ep
 
 
 def _tok_per_sec(r):
@@ -211,7 +207,7 @@ RECENT_COLS = [
     RecentCol("Client", 12, False, lambda r: r["client"]),
     RecentCol("Model", 0, False, lambda r: r["model"], flex=True),
     RecentCol("API", 7, False, _api),
-    RecentCol("Input", 8, True, lambda r: fmt(r["input_tokens"])),
+    RecentCol("Input", 8, True, lambda r: "canceled" if request_outcome(r) == "canceled" else fmt(r["input_tokens"])),
     RecentCol("Output", 7, True, lambda r: fmt(r["output_tokens"])),
     RecentCol("Cached", 8, True, lambda r: fmt(r["cached_tokens"])),
     RecentCol("TTFT", 6, True, lambda r: f"{r['ttft_ms'] / 1000:.1f}s" if r["ttft_ms"] is not None else "-"),
@@ -421,7 +417,7 @@ class Dashboard:
         cv.put(y, 1, "".join(fit(c.header, c.width, c.right) + " " for c in cols), th.dim)
         for i, r in enumerate(self.data["recent"][self.scroll:self.scroll + max(0, h - 1)]):
             line = "".join(fit(c.get(r), c.width, c.right) + " " for c in cols)
-            cv.put(y + 1 + i, 1, line, th.err if _failed(r) else "")
+            cv.put(y + 1 + i, 1, line, {"failed": th.err, "canceled": th.dim}.get(request_outcome(r), ""))
 
     def key(self, k):
         if k in ("q", "esc"):

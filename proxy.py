@@ -109,6 +109,17 @@ class StreamUsage:
         self.model = model or self.model
 
 
+CLIENT_DISCONNECTED = "client disconnected"
+
+
+def request_outcome(row):
+    if (row.get("error") or "").startswith(CLIENT_DISCONNECTED):
+        return "canceled"
+    if (row.get("status") or 0) >= 400 or row.get("error"):
+        return "failed"
+    return "ok"
+
+
 def is_injected_usage_chunk(data):
     return bool(data.get("usage")) and not data.get("choices")
 
@@ -275,7 +286,7 @@ class Handler(BaseHTTPRequestHandler):
                         rec["error"] = data[:500].decode("utf-8", "replace")
         except (BrokenPipeError, ConnectionResetError) as e:
             usage, model, ttft = {}, None, None
-            rec["error"] = f"client disconnected: {e}"
+            rec["error"] = f"{CLIENT_DISCONNECTED}: {e}"
         finally:
             conn.close()
 

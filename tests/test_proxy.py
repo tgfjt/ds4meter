@@ -42,7 +42,7 @@ def sse(events):
 def upstream_reply(path, req):
     if path == "/v1/models":
         return FakeResponse(200, "application/json", b'{"data":[]}')
-    if path == "/v1/fail":
+    if path == "/v1/fail" or req.get("fail"):
         return FakeResponse(500, "application/json", b'{"error":"boom"}')
     if not req.get("stream"):
         body = {
@@ -131,6 +131,32 @@ def run_traffic():
             "SELECT endpoint, model, client, stream, status, input_tokens, output_tokens, cached_tokens,"
             " reasoning_tokens, ttft_ms IS NOT NULL, error FROM requests ORDER BY id")]
     return {"responses": responses, "sent": FakeConnection.sent, "rows": rows}
+
+
+def disconnect_midway(path, body):
+    client, server = socket.socketpair()
+    data = json.dumps(body).encode()
+    client.sendall(f"POST {path} HTTP/1.1\r\nHost: x\r\nContent-Length: {len(data)}\r\n\r\n".encode() + data)
+    client.close()
+    proxy.Handler(server, ("x", 0), None)
+    server.close()
+
+
+class Outcome(unittest.TestCase):
+    def outcomes(self):
+        FakeConnection.sent, FakeConnection.refuse = [], False
+        with tmpdir() as d, frozen_clock(), mock.patch.object(proxy.http.client, "HTTPConnection", FakeConnection):
+            proxy.Handler.upstream = ("http", "x", 1)
+            proxy.Handler.store = proxy.Store(f"{d}/usage.db")
+            call("POST", "/v1/messages", {"model": "m"})
+            call("POST", "/v1/messages", {"model": "m", "fail": True})
+            disconnect_midway("/v1/chat/completions", {"model": "m", "stream": True})
+            FakeConnection.refuse = True
+            call("POST", "/v1/messages", {"model": "m"})
+            return sorted(proxy.request_outcome(r) for r in proxy.Handler.store.stats(1)["recent"])
+
+    def test_client_disconnect_is_canceled_not_failed(self):
+        self.assertEqual(self.outcomes(), ["canceled", "failed", "failed", "ok"])
 
 
 class ProxyTraffic(unittest.TestCase):
