@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ds4-server の前段に置くトークン計測プロキシ。
 
-標準ライブラリのみ。全リクエストを upstream へ素通しし、
+全リクエストを upstream へ素通しし、
 /v1/chat/completions, /v1/completions, /v1/responses, /v1/messages の
 レスポンス（ストリーミング含む）から usage を拾って SQLite に記録する。
 記録は tui.py で見る。
