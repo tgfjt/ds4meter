@@ -516,7 +516,7 @@
 <text x="84.0" y="404" fill="#808080" xml:space="preserve" textLength="159.6" lengthAdjust="spacingAndGlyphs"> By client / model </text>
 <text x="260.4" y="404" fill="#808080" xml:space="preserve" textLength="42.0" lengthAdjust="spacingAndGlyphs">(tab)</text>
 <text x="319.2" y="404" fill="#808080" xml:space="preserve" textLength="142.8" lengthAdjust="spacingAndGlyphs">1-16 / 500  (j/k)</text>
-<text x="714.0" y="404" fill="#808080" xml:space="preserve" textLength="117.6" lengthAdjust="spacingAndGlyphs">  unit: tokens</text>
+<text x="730.8" y="404" fill="#808080" xml:space="preserve" textLength="100.8" lengthAdjust="spacingAndGlyphs">unit: tokens</text>
 <text x="8.4" y="421" fill="#808080" xml:space="preserve" textLength="814.8" lengthAdjust="spacingAndGlyphs">Time        Client       Model                   API        Input  Output   Cached    Dur  tok/s </text>
 <text x="0.0" y="438" fill="#c9d1d9" xml:space="preserve" textLength="840.0" lengthAdjust="spacingAndGlyphs"> 10/18 11:59 pi           qwen3.8-flash-next      chat ~    10,956   2,277    7,659  51.8s   45.2   </text>
 <text x="8.4" y="455" fill="#808080" xml:space="preserve" textLength="814.8" lengthAdjust="spacingAndGlyphs">10/18 11:55 pi           qwen3.8-flash-next      chat ~  canceled       -        -  23.7s      - </text>
