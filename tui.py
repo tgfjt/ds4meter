@@ -319,12 +319,16 @@ class Dashboard:
             cv.put(y + 1 + r, 1, name, th.dim)
         y += 8
         span = sum(by_day.get((start + dt.timedelta(days=i)).isoformat(), 0) for i in range((today - start).days + 1))
-        cv.spans(y, x0, [(f"{weeks}週間で ", th.dim), (fmt(span), th.bold), (" tok", th.dim)])
+        total = [(f"{start:%Y/%m/%d} から今日まで ", th.dim), (fmt(span), th.bold), (" tok", th.dim)]
         labels = ["0"] + [f"<{compact(b)}" for b in DAILY_TOKEN_THRESHOLDS] + [f"{compact(DAILY_TOKEN_THRESHOLDS[-1])}+"]
         legend = []
         for (ch, attr), label in zip(th.heat, labels):
             legend += [(ch, attr), (f" {label}  ", th.dim)]
-        cv.spans(y, max(x0, x0 + weeks * 2 - sum(width(t) for t, _ in legend)), legend)
+        total_w, legend_w = (sum(width(t) for t, _ in parts) for parts in (total, legend))
+        cv.spans(y, max(x0, x0 + weeks * 2 - legend_w), legend)
+        if total_w + 2 + legend_w > weeks * 2:
+            y += 1
+        cv.spans(y, x0, total)
         return y + 1
 
     def _period_table(self, cv, th, y, rows):
