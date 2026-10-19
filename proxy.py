@@ -174,7 +174,8 @@ class Store:
                 return c.execute(
                     f"""SELECT COALESCE({col},'(unknown)') AS name, COUNT(*) AS requests,
                                SUM(COALESCE(input_tokens,0)) AS input_tokens,
-                               SUM(COALESCE(output_tokens,0)) AS output_tokens
+                               SUM(COALESCE(output_tokens,0)) AS output_tokens,
+                               SUM(COALESCE(cached_tokens,0)) AS cached_tokens
                         FROM requests WHERE ts >= ? GROUP BY name
                         ORDER BY input_tokens + output_tokens DESC LIMIT 20""", (since,)).fetchall()
 

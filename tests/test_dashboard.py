@@ -129,6 +129,41 @@ class Outcome(unittest.TestCase):
                 self.assertTrue(failed and ERR in failed[0], f"w={w}: failed row stays red")
 
 
+class CacheRate(unittest.TestCase):
+    def dash(self, d):
+        store = make_store("one", d)
+        store.insert({"ts": NOW + 60, "endpoint": "/v1/chat/completions", "model": "m", "client": "pi", "stream": 1,
+                      "status": 200, "input_tokens": 5151, "output_tokens": 805, "cached_tokens": 3990,
+                      "duration_ms": 17300, "ttft_ms": 1000})
+        return tui.Dashboard(store, 1)
+
+    def lines(self, dash, w):
+        cv = tui.Canvas(40, w)
+        dash.draw(cv, tui.Theme(False))
+        return cv.text().split("\n")
+
+    def test_recent_shows_cache_rate_per_request(self):
+        with tmpdir() as d, frozen_clock():
+            dash = self.dash(d)
+            lines = self.lines(dash, 120)
+            self.assertIn("Cache", next(l for l in lines if "Client" in l and "Model" in l))
+            pi = next(l for l in lines if " pi " in l)
+            lorca = next(l for l in lines if " lorca-agent " in l)
+            self.assertRegex(pi, r" 77% ", pi)
+            self.assertRegex(lorca, r" 0% ", lorca)
+            self.assertNotIn("3,990", pi)
+
+    def test_breakdown_shows_cache_rate_per_client_and_model(self):
+        with tmpdir() as d, frozen_clock():
+            dash = self.dash(d)
+            dash.lower = "breakdown"
+            lines = self.lines(dash, 120)
+            header = next(l for l in lines if l.lstrip().startswith("Client"))
+            self.assertEqual(header.count("Cache"), 2, header)
+            self.assertRegex(next(l for l in lines if l.lstrip().startswith("pi ")), r" 77%")
+            self.assertRegex(next(l for l in lines if l.lstrip().startswith("lorca-agent ")), r" 0%")
+
+
 class Heights(unittest.TestCase):
     def test_lower_pane_shows_rows_at_every_supported_height(self):
         with tmpdir() as d, frozen_clock():

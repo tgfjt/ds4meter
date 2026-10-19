@@ -52,6 +52,10 @@ def fmt(n):
     return "-" if n is None else f"{int(n):,}"
 
 
+def cache_rate(cached, inp):
+    return f"{round((cached or 0) / inp * 100)}%" if inp else "-"
+
+
 def width(s):
     return sum(2 if unicodedata.east_asian_width(c) in "WF" else 1 for c in s)
 
@@ -209,13 +213,14 @@ RECENT_COLS = [
     RecentCol("API", 7, False, _api),
     RecentCol("Input", 8, True, lambda r: "canceled" if request_outcome(r) == "canceled" else fmt(r["input_tokens"])),
     RecentCol("Output", 7, True, lambda r: fmt(r["output_tokens"])),
-    RecentCol("Cached", 8, True, lambda r: fmt(r["cached_tokens"])),
+    RecentCol("Cache", 5, True, lambda r: cache_rate(r["cached_tokens"], r["input_tokens"])),
     RecentCol("TTFT", 6, True, lambda r: f"{r['ttft_ms'] / 1000:.1f}s" if r["ttft_ms"] is not None else "-"),
     RecentCol("Dur", 6, True, lambda r: f"{r['duration_ms'] / 1000:.1f}s" if r["duration_ms"] else "-"),
     RecentCol("tok/s", 6, True, _tok_per_sec),
 ]
-RECENT_DROP_ORDER = ("TTFT", "Cached", "Dur", "API", "tok/s")
+RECENT_DROP_ORDER = ("TTFT", "Cache", "Dur", "API", "tok/s")
 RECENT_MODEL_MIN = 20
+BREAKDOWN_NAME_MIN = 12
 
 PERIOD_COLS = [
     PeriodCol("Req", 5, lambda g: g["requests"]),
@@ -286,7 +291,7 @@ class Dashboard:
                 ("  ", ""), (fmt(t["requests"]), ""), (" req", th.dim),
             ])
             y += 1
-        hit = f"{round(period['cached_tokens'] / period['input_tokens'] * 100)}%" if period["input_tokens"] else "-"
+        hit = cache_rate(period["cached_tokens"], period["input_tokens"])
         tps = f"{self.data['tokens_per_sec']:.1f}" if self.data["tokens_per_sec"] else "-"
         more = [("cache ", th.dim), (hit, ""), ("   ", ""), (tps, ""), (" tok/s", th.dim)]
         if end + 3 + sum(width(text) for text, _ in more) <= cv.w - 1:
@@ -404,13 +409,16 @@ class Dashboard:
             self._breakdown(cv, th, y + n, 1, cv.w - 2, avail - n, "Model", self.data["by_model"])
 
     def _breakdown(self, cv, th, y, x, w, h, title, rows):
-        name_w = max(8, w - 6 - 10 - 10 - 3)
-        cv.put(y, x, fit(title, name_w) + fit("Req", 6, True) + fit("Input", 10, True) + fit("Output", 10, True), th.dim)
+        cache_w = 6 if w - 6 - 10 - 10 - 6 - 3 >= BREAKDOWN_NAME_MIN else 0
+        name_w = max(8, w - 6 - 10 - 10 - cache_w - 3)
+        cv.put(y, x, fit(title, name_w) + fit("Req", 6, True) + fit("Input", 10, True) + fit("Output", 10, True)
+               + fit("Cache", cache_w, True), th.dim)
         if not rows:
             cv.put(y + 1, x, "No records in this period", th.dim)
         for i, r in enumerate(rows[self.scroll:self.scroll + max(0, h - 1)]):
             cv.put(y + 1 + i, x, fit(r["name"], name_w) + fit(fmt(r["requests"]), 6, True)
-                   + fit(fmt(r["input_tokens"]), 10, True) + fit(fmt(r["output_tokens"]), 10, True))
+                   + fit(fmt(r["input_tokens"]), 10, True) + fit(fmt(r["output_tokens"]), 10, True)
+                   + fit(cache_rate(r["cached_tokens"], r["input_tokens"]), cache_w, True))
 
     def _recent(self, cv, th, y, h):
         cols = RECENT_COLS
